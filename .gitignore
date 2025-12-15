@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environments
+venv/
+.env/
+
+# ML / DL
+*.pt
+*.pth
+*.bin
+*.ckpt
+*.h5
+*.onnx
+
+# Datasets
+data/
+datasets/
+
+# HuggingFace / Ollama
+.cache/
+models/
+
+# Logs
+*.log
