@@ -21,6 +21,7 @@ datasets/
 # HuggingFace / Ollama
 .cache/
 models/
+gpt2/
 
 # Logs
 *.log

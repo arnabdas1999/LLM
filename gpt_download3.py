@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-def download_and_load_gpt2(model_size, models_dir):
+def download_and_load_gpt2(model_size, models_dir, progress_callback=None):
     # Validate model size
     allowed_sizes = ("124M", "355M", "774M", "1558M")
     if model_size not in allowed_sizes:
@@ -25,7 +25,7 @@ def download_and_load_gpt2(model_size, models_dir):
     for filename in filenames:
         file_url = os.path.join(base_url, model_size, filename)
         file_path = os.path.join(model_dir, filename)
-        download_file(file_url, file_path)
+        download_file(file_url, file_path, progress_callback)
 
     ## We have reached here until now ---> we have downloaded the files on our local machine.
 
@@ -36,7 +36,7 @@ def download_and_load_gpt2(model_size, models_dir):
 
     return settings, params
 
-def download_file(url, destination):
+def download_file(url, destination, progress_callback=None):
     try:
         # Send a GET request to download the file, disabling SSL verification
         response = requests.get(url, stream=True, verify=False)
@@ -49,13 +49,17 @@ def download_file(url, destination):
             file_size_local = os.path.getsize(destination)
             if file_size == file_size_local:
                 print(f"File already exists and is up-to-date: {destination}")
+                if progress_callback:
+                     progress_callback(file_size, file_size, url.split("/")[-1]) 
                 return
 
         # Define the block size for reading the file
-        block_size = 1024  # 1 Kilobyte
+        block_size = 1024 * 1024  # 1 Megabyte
 
         # Initialize the progress bar with total file size
         progress_bar_description = url.split("/")[-1]  # Extract filename from URL
+        
+        downloaded = 0
         with tqdm(total=file_size, unit="iB", unit_scale=True, desc=progress_bar_description) as progress_bar:
             # Open the destination file in binary write mode
             with open(destination, "wb") as file:
@@ -63,6 +67,9 @@ def download_file(url, destination):
                 for chunk in response.iter_content(block_size):
                     progress_bar.update(len(chunk))  # Update progress bar
                     file.write(chunk)  # Write the chunk to the file
+                    downloaded += len(chunk)
+                    if progress_callback:
+                        progress_callback(downloaded, file_size, progress_bar_description)
 
     except requests.exceptions.RequestException as e:
         print(f"Error downloading the file: {e}")
